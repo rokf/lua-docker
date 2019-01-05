@@ -1,9 +1,9 @@
 package = "docker"
 
-version = "dev"
+version = "scm"
 
 source = {
-  url = "http://github.com/rokf/lua-docker"
+  url = "git://github.com/rokf/lua-docker"
 }
 
 description = {
@@ -14,7 +14,7 @@ description = {
     the things you could do with the docker command-line
     tool.
   ]],
-  homepage = "http://github.com/rokf/lua-docker",
+  homepage = "https://github.com/rokf/lua-docker",
   license = "MIT"
 }
 

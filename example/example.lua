@@ -1,20 +1,12 @@
 local docker = require 'code.docker'
-local cqueues = require 'cqueues'
-local serpent = require 'serpent'
-
-local cq = cqueues.new()
+local utils = require 'example.utils'
 
 local d = docker.new('localhost', '/var/run/docker.sock', 'v1.38')
 
-local function block_print(x)
-  print(serpent.block(x, { comment = false }))
-end
+local creation_response, response_headers = d:create_container(nil, {
+  Image = "alpine",
+  Cmd = { "date" }
+})
 
-cq:wrap(function ()
-  d:get_version()
-  local containers = d:get_containers({size = 'true'})
-  local first_id = containers[1].Id
-  block_print(d:list_container_processes(first_id))
-end)
-
-assert(cq:loop())
+utils.block_print(creation_response)
+utils.print_headers(response_headers)

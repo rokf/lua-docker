@@ -176,6 +176,18 @@ return {
       delete_unused_networks = function (self, query)
         return perform_request(self, 'POST', '/networks/prune', query)
       end,
+
+      list_volumes = function (self, query)
+        return perform_request(self, 'GET', '/volumes', query)
+      end,
+
+      create_volume = function (self, body)
+        return perform_request(self, 'POST', '/volumes/create', nil, nil, body)
+      end,
+
+      delete_unused_volumes = function (self, query)
+        return perform_request(self, 'POST', '/volumes/prune', query)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -211,6 +223,11 @@ return {
       ['connect_container_to_network'] = { method = 'POST', endpoint = 'connect' },
       ['disconnect_container_from_network'] = { method = 'POST', endpoint = 'disconnect' },
     }, 'networks', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_volume'] = { method = 'GET' },
+      ['remove_volume'] = { method = 'DELETE' },
+    }, 'volumes', d)
 
     return d
   end

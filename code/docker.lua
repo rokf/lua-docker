@@ -216,6 +216,10 @@ return {
       unlock_swarm_manager = function (self, body)
         return perform_request(self, 'POST', '/swarm/unlock', nil, nil, body)
       end,
+
+      list_nodes = function (self, query)
+        return perform_request(self, 'GET', '/nodes', query)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -263,6 +267,12 @@ return {
       ['resize_exec_instance'] = { method = 'POST', endpoint = 'resize' },
       ['inspect_exec_instance'] = { method = 'GET', endpoint = 'json' },
     }, 'exec', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_node'] = { method = 'GET' },
+      ['delete_node'] = { method = 'DELETE' },
+      ['update_node'] = { method = 'POST', endpoint = 'update' },
+    }, 'nodes', d)
 
     return d
   end

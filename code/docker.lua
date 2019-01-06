@@ -238,6 +238,14 @@ return {
       list_tasks = function (self, query)
         return perform_request(self, 'GET', '/tasks', query)
       end,
+
+      list_secrets = function (self, query)
+        return perform_request(self, 'GET', '/secrets', query)
+      end,
+
+      create_secret = function (self, body)
+        return perform_request(self, 'POST', '/secrets/create', nil, nil, body)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -302,6 +310,12 @@ return {
     loop_through_entity_endpoints({
       ['inspect_task'] = { method = 'GET' },
     }, 'tasks', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_secret'] = { method = 'GET' },
+      ['delete_secret'] = { method = 'DELETE' },
+      ['update_secret'] = { method = 'POST', endpoint = 'update' },
+    }, 'secrets', d)
 
     return d
   end

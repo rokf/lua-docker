@@ -80,6 +80,23 @@ local perform_request = function (instance, method, endpoint, query, authority, 
   return handle_response_body(response_body), response_headers
 end
 
+local loop_through_entity_endpoints = function (endpoint_data, group, target_table)
+  for k, v in pairs(endpoint_data) do
+    target_table[k] = function (self, name_or_id, query, authority, body)
+      return perform_request(
+        self, v.method,
+        string.format(
+          '/%s/%s%s', group, name_or_id,
+          v.endpoint and ('/' .. v.endpoint) or ''
+        ),
+        query,
+        authority,
+        body
+      )
+    end
+  end
+end
+
 return {
   new = function (host, path, version)
     local d = {
@@ -122,12 +139,34 @@ return {
         return perform_request(self, 'GET', '/images/json', query)
       end,
 
-      tag_image = function (self, name_or_id, query)
-        return perform_request(self, 'POST', '/images/' .. name_or_id .. '/tag', query)
+      delete_builder_cache = function (self)
+        return perform_request(self, 'POST', '/build/prune')
       end,
+
+      create_image = function (self, query, auth, body)
+        return perform_request(self, 'POST', '/images/create', query, auth, body)
+      end,
+
+      search_image = function (self, query)
+        return perform_request(self, 'GET', '/images/search', query)
+      end,
+
+      delete_unused_images = function (self, query)
+        return perform_request(self, 'POST', '/images/prune', query)
+      end,
+
+      create_image_from_container = function (self, query, body)
+        return perform_request(self, 'POST', '/commit', query, nil, body)
+      end,
+
+      -- @todo missing endpoints:
+      -- build_image
+      -- export_image
+      -- export_images
+      -- import_images
     }
 
-    for k, v in pairs({
+    loop_through_entity_endpoints({
       ['list_container_processes'] = { method = 'GET', endpoint = 'top' },
       ['inspect_container'] = { method = 'GET', endpoint = 'json' },
       ['get_container_logs'] = { method = 'GET', endpoint = 'logs' },
@@ -144,18 +183,15 @@ return {
       ['remove_container'] = { method = 'DELETE' },
       ['get_container_resource_info'] = { method = 'HEAD', endpoint = 'archive' },
       ['get_container_resource_archive'] = { method = 'GET', endpoint = 'archive' },
-    }) do
-      d[k] = function (self, name_or_id, query)
-        return perform_request(
-          self, v.method,
-          string.format(
-            '/containers/%s%s', name_or_id,
-            v.endpoint and ('/' .. v.endpoint) or ''
-          ),
-          query
-        )
-      end
-    end
+    }, 'containers', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_image'] = { method = 'GET', endpoint = 'json' },
+      ['get_image_history'] = { method = 'GET', endpoint = 'history' },
+      ['push_image'] = { method = 'POST', endpoint = 'push' },
+      ['tag_image'] = { method = 'POST', endpoint = 'tag' },
+      ['remove_image'] = { method = 'DELETE' },
+    }, 'images', d)
 
     return d
   end

@@ -164,6 +164,18 @@ return {
       -- export_image
       -- export_images
       -- import_images
+
+      list_networks = function (self, query)
+        return perform_request(self, 'GET', '/networks', query)
+      end,
+
+      create_network = function (self, body)
+        return perform_request(self, 'POST', '/networks/create', nil, nil, body)
+      end,
+
+      delete_unused_networks = function (self, query)
+        return perform_request(self, 'POST', '/networks/prune', query)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -192,6 +204,13 @@ return {
       ['tag_image'] = { method = 'POST', endpoint = 'tag' },
       ['remove_image'] = { method = 'DELETE' },
     }, 'images', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_network'] = { method = 'GET' },
+      ['remove_network'] = { method = 'DELETE' },
+      ['connect_container_to_network'] = { method = 'POST', endpoint = 'connect' },
+      ['disconnect_container_from_network'] = { method = 'POST', endpoint = 'disconnect' },
+    }, 'networks', d)
 
     return d
   end

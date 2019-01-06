@@ -97,6 +97,12 @@ local loop_through_entity_endpoints = function (endpoint_data, group, target_tab
   end
 end
 
+-- @todo handle streaming responses
+-- example: functions which return logs
+-- also provide a streaming variant
+-- those endpoints have a bool follow
+-- query parameter set to true
+
 return {
   new = function (host, path, version)
     local d = {
@@ -228,6 +234,10 @@ return {
       create_service = function (self, auth, body)
         return perform_request(self, 'POST', '/services/create', nil, auth, body)
       end,
+
+      list_tasks = function (self, query)
+        return perform_request(self, 'GET', '/tasks', query)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -288,6 +298,10 @@ return {
       ['update_service'] = { method = 'POST', endpoint = 'update' },
       ['get_service_logs'] = { method = 'GET', endpoint = 'logs' },
     }, 'services', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_task'] = { method = 'GET' },
+    }, 'tasks', d)
 
     return d
   end

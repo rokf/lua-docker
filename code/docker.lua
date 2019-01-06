@@ -207,6 +207,7 @@ return {
       ['remove_container'] = { method = 'DELETE' },
       ['get_container_resource_info'] = { method = 'HEAD', endpoint = 'archive' },
       ['get_container_resource_archive'] = { method = 'GET', endpoint = 'archive' },
+      ['create_exec_instance'] = { method = 'POST', endpoint = 'exec' },
     }, 'containers', d)
 
     loop_through_entity_endpoints({
@@ -228,6 +229,12 @@ return {
       ['inspect_volume'] = { method = 'GET' },
       ['remove_volume'] = { method = 'DELETE' },
     }, 'volumes', d)
+
+    loop_through_entity_endpoints({
+      ['start_exec_instance'] = { method = 'POST', endpoint = 'start' },
+      ['resize_exec_instance'] = { method = 'POST', endpoint = 'resize' },
+      ['inspect_exec_instance'] = { method = 'GET', endpoint = 'json' },
+    }, 'exec', d)
 
     return d
   end

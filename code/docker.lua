@@ -5,6 +5,17 @@ local util = require 'http.util'
 local cjson = require 'cjson'
 local basexx = require 'basexx'
 
+local handle_response_body = function (body)
+  if type(body) == 'string' then
+    if string.match(body, '[[{]') then
+      return cjson.decode(body)
+    end
+    return body
+  else
+    return nil
+  end
+end
+
 local perform_request = function (instance, method, endpoint, query, authority, body)
   local connection = client.connect {
     host = instance.host,
@@ -66,7 +77,7 @@ local perform_request = function (instance, method, endpoint, query, authority, 
 
   local response_body = stream:get_body_as_string()
 
-  return response_body and cjson.decode(response_body) or nil, response_headers
+  return handle_response_body(response_body), response_headers
 end
 
 return {
@@ -88,13 +99,24 @@ return {
         return perform_request(self, 'POST', '/containers/create', query, nil, body)
       end,
 
-      inspect_container = function (self, id, query)
-        return perform_request(self, 'GET', '/containers/' .. id .. '/json', query)
+      update_container = function (self, name_or_id, body)
+        return perform_request(
+          self, 'POST',
+          string.format('/containers/%s/%s', name_or_id, 'update'),
+          nil, nil, body
+        )
       end,
 
-      list_container_processes = function (self, id, query)
-        return perform_request(self, 'GET', '/containers/' .. id .. '/top', query)
+      delete_stopped_containers = function (self, query)
+        return perform_request(self, 'POST', '/containers/prune', query)
       end,
+
+      -- @todo missing endpoints:
+      -- export_container
+      -- get_container_stats
+      -- attach_to_container
+      -- attach_to_container_ws
+      -- extract_archive_to_container_dir
 
       list_images = function (self, query)
         return perform_request(self, 'GET', '/images/json', query)
@@ -104,6 +126,36 @@ return {
         return perform_request(self, 'POST', '/images/' .. name_or_id .. '/tag', query)
       end,
     }
+
+    for k, v in pairs({
+      ['list_container_processes'] = { method = 'GET', endpoint = 'top' },
+      ['inspect_container'] = { method = 'GET', endpoint = 'json' },
+      ['get_container_logs'] = { method = 'GET', endpoint = 'logs' },
+      ['get_container_fs_changes'] = { method = 'GET', endpoint = 'changes' },
+      ['resize_container_tty'] = { method = 'POST', endpoint = 'resize' },
+      ['start_container'] = { method = 'POST', endpoint = 'start' },
+      ['stop_container'] = { method = 'POST', endpoint = 'stop' },
+      ['restart_container'] = { method = 'POST', endpoint = 'restart' },
+      ['kill_container'] = { method = 'POST', endpoint = 'kill' },
+      ['rename_container'] = { method = 'POST', endpoint = 'rename' },
+      ['pause_container'] = { method = 'POST', endpoint = 'pause' },
+      ['resume_container'] = { method = 'POST', endpoint = 'unpause' },
+      ['wait_for_container'] = { method = 'POST', endpoint = 'wait' },
+      ['remove_container'] = { method = 'DELETE' },
+      ['get_container_resource_info'] = { method = 'HEAD', endpoint = 'archive' },
+      ['get_container_resource_archive'] = { method = 'GET', endpoint = 'archive' },
+    }) do
+      d[k] = function (self, name_or_id, query)
+        return perform_request(
+          self, v.method,
+          string.format(
+            '/containers/%s%s', name_or_id,
+            v.endpoint and ('/' .. v.endpoint) or ''
+          ),
+          query
+        )
+      end
+    end
 
     return d
   end

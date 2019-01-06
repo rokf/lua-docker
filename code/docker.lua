@@ -220,6 +220,14 @@ return {
       list_nodes = function (self, query)
         return perform_request(self, 'GET', '/nodes', query)
       end,
+
+      list_services = function (self, query)
+        return perform_request(self, 'GET', '/services', query)
+      end,
+
+      create_service = function (self, auth, body)
+        return perform_request(self, 'POST', '/services/create', nil, auth, body)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -273,6 +281,13 @@ return {
       ['delete_node'] = { method = 'DELETE' },
       ['update_node'] = { method = 'POST', endpoint = 'update' },
     }, 'nodes', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_service'] = { method = 'GET' },
+      ['delete_service'] = { method = 'DELETE' },
+      ['update_service'] = { method = 'POST', endpoint = 'update' },
+      ['get_service_logs'] = { method = 'GET', endpoint = 'logs' },
+    }, 'services', d)
 
     return d
   end

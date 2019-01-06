@@ -188,6 +188,34 @@ return {
       delete_unused_volumes = function (self, query)
         return perform_request(self, 'POST', '/volumes/prune', query)
       end,
+
+      inspect_swarm = function (self)
+        return perform_request(self, 'GET', '/swarm')
+      end,
+
+      initialize_swarm = function (self, body)
+        return perform_request(self, 'POST', '/swarm/init', nil, nil, body)
+      end,
+
+      join_swarm = function (self, body)
+        return perform_request(self, 'POST', '/swarm/join', nil, nil, body)
+      end,
+
+      leave_swarm = function (self, query)
+        return perform_request(self, 'POST', '/swarm/leave', query)
+      end,
+
+      update_swarm = function (self, query, body)
+        return perform_request(self, 'POST', '/swarm/update', query, nil, body)
+      end,
+
+      get_swarm_unlockkey = function (self)
+        return perform_request(self, 'GET', '/swarm/unlockkey')
+      end,
+
+      unlock_swarm_manager = function (self, body)
+        return perform_request(self, 'POST', '/swarm/unlock', nil, nil, body)
+      end,
     }
 
     loop_through_entity_endpoints({

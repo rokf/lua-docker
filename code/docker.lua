@@ -16,8 +16,41 @@ local handle_response_body = function (body)
   end
 end
 
+local validate_instance = function (instance)
+  if type(instance) ~= 'table' then
+    return nil, "not a table"
+  end
+
+  if instance.host == nil then
+    return nil, "missing host"
+  end
+
+  if instance.path == nil then
+    return nil, "missing path"
+  end
+
+  if instance.version == nil then
+    return nil, "missing version"
+  end
+
+  return true
+end
+
 local perform_request = function (instance, method, endpoint, query, authority, body)
-  local connection = client.connect {
+  local response_body
+  local response_headers
+  local err, errn
+  local wh_failure, wb_failure
+  local connection, stream
+  local instance_check
+
+  instance_check, err = validate_instance(instance)
+
+  if instance_check == nil then
+    return instance_check, err
+  end
+
+  connection, err, errn = client.connect {
     host = instance.host,
     path = instance.path,
     version = 1.1,
@@ -26,13 +59,27 @@ local perform_request = function (instance, method, endpoint, query, authority, 
     tls = false
   }
 
-  local stream = connection:new_stream()
+  -- error while making connection
+
+  if connection == nil then
+    return connection, err, errn
+  end
+
+  stream = connection:new_stream()
+
+  -- error while creating stream
+
+  if stream == nil then
+    return stream, err, errn
+  end
 
   -- prepare headers
 
   local h = headers.new()
 
-  h:append(':method', method)
+  h:append(':method', method or 'GET')
+
+  -- HTTP 1.1 seems to require this header
 
   h:append(':authority', '')
 
@@ -40,11 +87,13 @@ local perform_request = function (instance, method, endpoint, query, authority, 
     '/%s%s%s',
     instance.version,
     endpoint,
-    query and '?' .. util.dict_to_query(query) or ''
+    (type(query) == 'table') and '?' .. util.dict_to_query(query) or ''
   ))
 
   h:append('content-type', body and 'application/json' or 'text/plain')
   h:append('user-agent', 'lua-docker')
+
+  -- docker uses a custom authority header
 
   if authority then
     local json_authority = cjson.encode(authority)
@@ -54,7 +103,7 @@ local perform_request = function (instance, method, endpoint, query, authority, 
 
   local encoded_body
 
-  if body then
+  if body ~= nil then
     if type(body) == 'table' then
       encoded_body = cjson.encode(body)
     else
@@ -69,19 +118,50 @@ local perform_request = function (instance, method, endpoint, query, authority, 
 
   if body then end_after_headers = false end
 
-  stream:write_headers(h, end_after_headers)
+  wh_failure, err, errn = stream:write_headers(h, end_after_headers)
+
+  -- error while writing headers to stream
+
+  if wh_failure == nil then
+    return wh_failure, err, errn
+  end
 
   if body then
-    stream:write_body_from_string(encoded_body)
+    wb_failure, err, errn = stream:write_body_from_string(encoded_body)
+
+    -- error while writing body to stream
+
+    if wb_failure == nil then
+      return wb_failure, err, errn
+    end
   end
 
   -- read response
 
-  local response_headers = stream:get_headers()
+  response_headers, err, errn = stream:get_headers()
 
-  local response_body = stream:get_body_as_string()
+  -- error getting response headers
 
-  return handle_response_body(response_body), response_headers
+  if response_headers == nil then
+    return response_headers, err, errn
+  end
+
+
+  response_body, err, errn = stream:get_body_as_string()
+
+  -- error getting response body
+
+  if response_body == nil then
+    return response_body, err, errn
+  end
+
+  -- successfull response
+
+  return {
+    body = handle_response_body(response_body),
+    headers = response_headers,
+    status = tonumber(response_headers:get(':status'))
+  }
 end
 
 local loop_through_entity_endpoints = function (endpoint_data, group, target_table)

@@ -354,6 +354,25 @@ return {
       create_plugin = function (self, query, body)
         return perform_request(self, 'POST', '/plugins/create', query, nil, body)
       end,
+
+      check_auth_config = function (self, body)
+        return perform_request(self, 'POST', '/auth', nil, nil, body)
+      end,
+
+      get_system_info = function (self)
+        return perform_request(self, 'GET', '/info')
+      end,
+
+      ping_server = function (self)
+        return perform_request(self, 'GET', '/_ping')
+      end,
+
+      -- @todo missing endpoints:
+      -- monitor_events
+
+      get_usage = function (self)
+        return perform_request(self, 'GET', '/system/df')
+      end,
     }
 
     loop_through_entity_endpoints({

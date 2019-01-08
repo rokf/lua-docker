@@ -194,6 +194,8 @@ return {
       path = path or '/var/run/docker.sock',
       version = version or 'v1.38',
 
+      custom = perform_request,
+
       get_version = function (self)
         return perform_request(self, 'GET', '/version')
       end,

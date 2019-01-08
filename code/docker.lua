@@ -254,6 +254,22 @@ return {
       create_config = function (self, body)
         return perform_request(self, 'POST', '/configs/create', nil, nil, body)
       end,
+
+      list_plugins = function (self, query)
+        return perform_request(self, 'GET', '/plugins', query)
+      end,
+
+      get_plugin_privileges = function (self, query)
+        return perform_request(self, 'GET', '/plugins/privileges', query)
+      end,
+
+      install_plugin = function (self, query, auth, body)
+        return perform_request(self, 'POST', '/plugins/pull', query, auth, body)
+      end,
+
+      create_plugin = function (self, query, body)
+        return perform_request(self, 'POST', '/plugins/create', query, nil, body)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -330,6 +346,16 @@ return {
       ['delete_config'] = { method = 'DELETE' },
       ['update_config'] = { method = 'POST', endpoint = 'update' },
     }, 'configs', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_plugin'] = { method = 'GET', endpoint = 'json' },
+      ['remove_plugin'] = { method = 'DELETE' },
+      ['enable_plugin'] = { method = 'POST', endpoint = 'enable' },
+      ['disable_plugin'] = { method = 'POST', endpoint = 'disable' },
+      ['upgrade_plugin'] = { method = 'POST', endpoint = 'upgrade' },
+      ['push_plugin'] = { method = 'POST', endpoint = 'push' },
+      ['configure_plugin'] = { method = 'POST', endpoint = 'set' },
+    }, 'plugins', d)
 
     return d
   end

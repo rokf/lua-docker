@@ -460,6 +460,10 @@ return {
       ['configure_plugin'] = { method = 'POST', endpoint = 'set' },
     }, 'plugins', d)
 
+    loop_through_entity_endpoints({
+      ['get_registry_image_info'] = { method = 'GET', endpoint = 'json' },
+    }, 'distribution', d)
+
     return d
   end
 }

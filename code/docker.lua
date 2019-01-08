@@ -55,7 +55,11 @@ local perform_request = function (instance, method, endpoint, query, authority, 
   local encoded_body
 
   if body then
-    encoded_body = cjson.encode(body)
+    if type(body) == 'table' then
+      encoded_body = cjson.encode(body)
+    else
+      encoded_body = tostring(body)
+    end
     h:append('content-length', tostring(#encoded_body))
   end
 

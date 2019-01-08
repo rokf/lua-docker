@@ -246,6 +246,14 @@ return {
       create_secret = function (self, body)
         return perform_request(self, 'POST', '/secrets/create', nil, nil, body)
       end,
+
+      list_configs = function (self, query)
+        return perform_request(self, 'GET', '/configs', query)
+      end,
+
+      create_config = function (self, body)
+        return perform_request(self, 'POST', '/configs/create', nil, nil, body)
+      end,
     }
 
     loop_through_entity_endpoints({
@@ -316,6 +324,12 @@ return {
       ['delete_secret'] = { method = 'DELETE' },
       ['update_secret'] = { method = 'POST', endpoint = 'update' },
     }, 'secrets', d)
+
+    loop_through_entity_endpoints({
+      ['inspect_config'] = { method = 'GET' },
+      ['delete_config'] = { method = 'DELETE' },
+      ['update_config'] = { method = 'POST', endpoint = 'update' },
+    }, 'configs', d)
 
     return d
   end

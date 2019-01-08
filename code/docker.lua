@@ -50,6 +50,14 @@ local perform_request = function (instance, method, endpoint, query, authority, 
     return instance_check, err
   end
 
+  if endpoint == nil then
+    return endpoint, "endpoint not defined"
+  end
+
+  if type(endpoint) ~= 'string' then
+    return nil, "endpoint should be a string"
+  end
+
   connection, err, errn = client.connect {
     host = instance.host,
     path = instance.path,

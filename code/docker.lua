@@ -2,15 +2,13 @@ local client = require 'http.client'
 local headers = require 'http.headers'
 local util = require 'http.util'
 
-local cjson = require 'cjson'
+local cjson = require 'cjson.safe'
 local basexx = require 'basexx'
 
 local handle_response_body = function (body)
   if type(body) == 'string' then
-    if string.match(body, '[[{]') then
-      return cjson.decode(body)
-    end
-    return body
+    local res = cjson.decode(body)
+    return res ~= nil and res or body
   else
     return nil
   end
@@ -104,16 +102,22 @@ local perform_request = function (instance, method, endpoint, query, authority, 
   -- docker uses a custom authority header
 
   if authority then
-    local json_authority = cjson.encode(authority)
+    local json_authority, e = cjson.encode(authority)
+    if json_authority == nil then
+      return nil, e, nil
+    end
     local base64_encoded_authority = basexx.to_base64(json_authority)
     h:append('X-Registry-Auth', base64_encoded_authority)
   end
 
-  local encoded_body
+  local encoded_body, e
 
   if body ~= nil then
     if type(body) == 'table' then
-      encoded_body = cjson.encode(body)
+      encoded_body, e = cjson.encode(body)
+      if encoded_body == nil then
+        return nil, e, nil
+      end
     else
       encoded_body = tostring(body)
     end

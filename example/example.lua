@@ -16,10 +16,14 @@ end
 
 print(string.format('The number of available containers is %d', container_ammount))
 
+assert(d:create_image({
+  fromImage = "alpine:latest"
+}))
+
 local creation_response = assert(d:create_container({
   name = new_container_name
 }, {
-  Image = "alpine",
+  Image = "alpine:latest",
   Cmd = { "echo", "hello" }
 }))
 
